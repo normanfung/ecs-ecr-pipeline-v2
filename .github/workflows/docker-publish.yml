@@ -1,0 +1,74 @@
+name: Build & Push to Amazon ECR
+
+# Trigger the workflow only when code is pushed to the 'main' branch
+on:
+  workflow_dispatch:
+
+# Define environment variables used throughout the workflow
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: 255945442255.dkr.ecr.us-east-1.amazonaws.com/norman-3.4-repo
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job
+
+    steps:
+    # Step 1: Checkout the latest code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Configure AWS credentials using GitHub secrets
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    # Step 3: Login to Amazon ECR so Docker can push the image
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # Step 4: Build the Docker image and push it to ECR with two tags (latest and commit SHA)
+    - name: Build and push Docker image to ECR
+      uses: docker/build-push-action@v6
+      env:
+        IMAGE_TAG_SHA: ${{ github.sha }}  # Tag for the specific commit
+        IMAGE_TAG_LATEST: latest          # Generic 'latest' tag
+      with:
+        context: ./application           # Path to the Docker context
+        push: true                       # Push the image to the registry
+        tags: |                          # List of tags for the image
+          ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG_LATEST }}
+          ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG_SHA }}
+
+    # Step 5: Export the image tag as an output variable for Terraform
+    - name: Set image tag output
+      id: vars
+      run: echo "image_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+    # Step 6: Set up Terraform CLI in the runner
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    # Step 7: Initialize Terraform configuration (downloads provider plugins, etc.)
+    - name: Terraform Init
+      working-directory: ./terraform
+      run: terraform init
+
+    # Step 8: Run Terraform plan to see the proposed infrastructure changes
+    - name: Terraform Plan
+      working-directory: ./terraform
+      run: |
+       terraform plan \
+        -var="image_tag=${{ steps.vars.outputs.image_tag }}" \
+        -out=tfplan
+      env:
+        TF_LOG: DEBUG  # Enable debug logging for Terraform
+
+    # Step 9: Apply the Terraform plan to provision/update infrastructure
+    - name: Terraform Apply
+      working-directory: ./terraform
+      run: terraform apply -auto-approve tfplan
