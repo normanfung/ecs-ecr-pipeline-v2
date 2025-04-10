@@ -4,6 +4,7 @@ resource "aws_ecr_repository" "app_repo" {
   encryption_configuration {
     encryption_type = "AES256"
   }
+  force_delete = true
 }
 
 resource "aws_ecr_repository_policy" "csr_policy" {
