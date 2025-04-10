@@ -53,12 +53,12 @@ jobs:
 
     # Step 7: Initialize Terraform configuration (downloads provider plugins, etc.)
     - name: Terraform Init
-      working-directory: ./terraform
+      working-directory: ./terraform/stage2-ecs
       run: terraform init
 
     # Step 8: Run Terraform plan to see the proposed infrastructure changes
     - name: Terraform Plan
-      working-directory: ./terraform
+      working-directory: ./terraform/stage2-ecs
       run: |
        terraform plan \
         -var="image_tag=${{ github.sha }}" \
