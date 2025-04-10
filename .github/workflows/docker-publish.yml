@@ -68,5 +68,5 @@ jobs:
 
     # Step 9: Apply the Terraform plan to provision/update infrastructure
     - name: Terraform Apply
-      working-directory: ./terraform
+      working-directory: ./terraform/stage2-ecs
       run: terraform apply -auto-approve tfplan
