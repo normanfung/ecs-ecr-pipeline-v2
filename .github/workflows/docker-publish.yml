@@ -7,7 +7,7 @@ on:
 # Define environment variables used throughout the workflow
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: 255945442255.dkr.ecr.us-east-1.amazonaws.com/norman-3.4-repo
+  ECR_REPO_NAME: ${{ vars.ECR_REPO_NAME }}
 
 jobs:
   build-and-deploy:
@@ -30,6 +30,9 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Set ECR repo URI
+      run: echo "ECR_REPO=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}" >> $GITHUB_ENV
 
     # Step 4: Build the Docker image and push it to ECR with two tags (latest and commit SHA)
     - name: Build and push Docker image to ECR
@@ -43,11 +46,6 @@ jobs:
         tags: |                          # List of tags for the image
           ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG_LATEST }}
           ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG_SHA }}
-
-    # Step 5: Export the image tag as an output variable for Terraform
-    - name: Set image tag output
-      id: vars
-      run: echo "image_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
 
     # Step 6: Set up Terraform CLI in the runner
     - name: Setup Terraform
@@ -63,7 +61,7 @@ jobs:
       working-directory: ./terraform
       run: |
        terraform plan \
-        -var="image_tag=${{ steps.vars.outputs.image_tag }}" \
+        -var="image_tag=${{ github.sha }}" \
         -out=tfplan
       env:
         TF_LOG: DEBUG  # Enable debug logging for Terraform
