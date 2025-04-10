@@ -40,15 +40,6 @@ Provision everything:
 
 > Triggered via `workflow_dispatch`.
 
-## 🧪 Requirements
-
-- AWS Account + ECR permissions
-- GitHub repo secrets:
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-- GitHub repository variable:
-  - `ECR_REPO_NAME` (e.g., `my-app-repo`)
-- S3 Backend Statefile Update for both stage1 and stage 2.
 ---
 
 ---
@@ -68,7 +59,7 @@ Used to:
 
 ---
 
-## 🧪 Requirements
+## 🧪 Requirements (IMPORTANT)
 
 - AWS Account + ECR permissions
 - GitHub repo secrets:
@@ -76,6 +67,7 @@ Used to:
   - `AWS_SECRET_ACCESS_KEY`
 - GitHub repository variable:
   - `ECR_REPO_NAME` (e.g., `my-app-repo`)
+- S3 Backend Statefile Update for both stage1 and stage 2. Both can be found in the top portion of respective Main.tf.
 
 ---
 
@@ -85,9 +77,9 @@ Used to:
 Go to **Actions > Full Infra + App Deploy > Run Workflow**
 
 This will:
-- Apply stage1 Terraform
-- Build & push Docker image
-- Apply stage2 Terraform with correct image reference
+- Apply stage1 Terraform - Provision Base Infra + CSR
+- Build & push Docker image to CSR
+- Apply stage2 Terraform - Provision ESC with Referenced Image
 
 ---
 
