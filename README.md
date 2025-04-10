@@ -37,11 +37,10 @@ Provision everything:
 - VPC, subnets, ECS cluster, IAM, ECR repo (stage1)
 - Docker image build & push to ECR
 - ECS service deployment using image tag (stage2)
+
 ![init-setup-workflow](./assets/init-setup-workflow.png)
 
 > Triggered via `workflow_dispatch`.
-
----
 
 ---
 
