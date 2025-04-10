@@ -30,13 +30,26 @@ This project provisions a complete AWS ECS Fargate infrastructure with Terraform
 
 ## ⚙️ GitHub Actions Workflows
 
-### ✅ `full-infra-deploy.yml` — Full Infra + App Deploy (Manual Trigger)
+### ✅ `init-setup.yml` — Full Infra + App Deploy (Manual Trigger)
+Run once at project Initialization
+
 Provision everything:
 - VPC, subnets, ECS cluster, IAM, ECR repo (stage1)
 - Docker image build & push to ECR
 - ECS service deployment using image tag (stage2)
 
 > Triggered via `workflow_dispatch`.
+
+## 🧪 Requirements
+
+- AWS Account + ECR permissions
+- GitHub repo secrets:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+- GitHub repository variable:
+  - `ECR_REPO_NAME` (e.g., `my-app-repo`)
+- S3 Backend Statefile Update for both stage1 and stage 2.
+---
 
 ---
 
@@ -49,12 +62,9 @@ Used to:
 
 ---
 
-### 💣 `destroy-infra.yml` — Destroy Entire Infra Stack
+### 💣 `infra-destroy.yml` — Destroy Entire Infra Stack
 - Destroys ECS service (stage2)
 - Then destroys all infra (stage1)
-- Optional: force-deletes images in ECR
-
-> Triggered manually or used in feature/preview environment cleanup.
 
 ---
 
